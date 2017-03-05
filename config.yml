@@ -14,7 +14,7 @@ ItemList:
   Crops: true
   # This includes all the common mob drops, i.e. Feather, Raw chicken, Raw Beef, Raw Porkchop,
   # Raw mutton, Spider eye, Ender pearl, Bone, Arrow, Wool, Iron Ingot, Blaze rod, Gunpowder,
-  # String, Gold nugget, Slimeball, Ink sack, Leather and Rotten Flesh.
+  # String, Gold nugget, Slimeball, Ink sack, Leather, Rotten Flesh, Prismarine Shard, Prismarine Crystals and Raw Fish.
   Mob-drops: true
   # Here you can add the custom items you want to be taken in by the tweaked hopper.
   # Please use Bukkit's material list's name.
