@@ -64,7 +64,9 @@ public class HLRCommandMain implements CommandExecutor {
 					if(player.hasPermission("HLR.nofee")){
 						//player.sendMessage("no need to pay");   //debug
 						paying = false;		
-					}			
+					} else if(player.isOp()) {
+						paying = false;
+					}
 				}
 			}
 
@@ -72,9 +74,17 @@ public class HLRCommandMain implements CommandExecutor {
 				ItemStack item = player.getItemInHand();
 				ItemMeta meta = player.getItemInHand().getItemMeta();
 				String CHname = HLRmain.CHname;
+				int maxamount = configHandler.maxamount;
+				if(configHandler.usePerms) {
+					if(player.hasPermission("HLR.limitbypass")) {
+						maxamount = 64;	
+					}
+				} else if(player.isOp()) {
+					maxamount = 64;
+				}
 				if(!configHandler.cooldown || !start) {
 					if(player.getItemInHand().getType().equals(Material.HOPPER)){
-						if(player.getItemInHand().getAmount() <= configHandler.maxamount) {
+						if(player.getItemInHand().getAmount() <= maxamount) {
 							if (meta.hasDisplayName() && meta.hasLore()){
 								if(!meta.getDisplayName().equals(CHname) && !meta.getLore().equals(HLRmain.hopperlore)){
 									convert = true;
@@ -96,9 +106,19 @@ public class HLRCommandMain implements CommandExecutor {
 								item.setItemMeta(meta);
 								player.sendMessage(ChatColor.GREEN + "Successfully converted the hopper to a " + ChatColor.YELLOW + ChatColor.stripColor(HLRmain.CHname) + ChatColor.GREEN + "!");
 								if(configHandler.cooldown) {
-									start = true;
-									Timer timer = new Timer();
-									timer.main(args);
+									if(configHandler.usePerms) {
+										if(!player.hasPermission("HLR.nocooldown")) {
+											//player.sendMessage("Start-nperms");  //debug
+											start = true;
+											Timer timer = new Timer();
+											timer.main(args);			
+										}
+									} else if(!player.isOp()) {
+										//player.sendMessage("Start-nop");  //debug
+										start = true;
+										Timer timer = new Timer();
+										timer.main(args);
+									}
 								}
 								if (paying) {
 										HLRmain.econ.withdrawPlayer(player, fee);
