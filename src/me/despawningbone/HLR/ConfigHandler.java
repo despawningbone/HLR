@@ -154,8 +154,8 @@ public class ConfigHandler {
 					itemList.add(new ItemStack(Material.ENDER_PEARL)); itemList.add(new ItemStack(Material.RAW_BEEF)); itemList.add(new ItemStack(Material.PORK)); itemList.add(new ItemStack(Material.SLIME_BALL));
 					itemList.add(new ItemStack(Material.WOOL)); itemList.add(new ItemStack(Material.ARROW)); itemList.add(new ItemStack(Material.SULPHUR)); itemList.add(new ItemStack(Material.GOLD_NUGGET));
 					itemList.add(new ItemStack(Material.IRON_INGOT)); itemList.add(new ItemStack(Material.MUTTON)); itemList.add(new ItemStack(Material.BONE)); itemList.add(new ItemStack(Material.INK_SACK)); 
-					itemList.add(new ItemStack(Material.BLAZE_ROD)); itemList.add(new ItemStack(Material.ROTTEN_FLESH)); itemList.add(new ItemStack(Material.STRING)); 
-					
+					itemList.add(new ItemStack(Material.BLAZE_ROD)); itemList.add(new ItemStack(Material.ROTTEN_FLESH)); itemList.add(new ItemStack(Material.STRING)); itemList.add(new ItemStack(Material.PRISMARINE_SHARD));
+					itemList.add(new ItemStack(Material.PRISMARINE_CRYSTALS)); itemList.add(new ItemStack(Material.RAW_FISH));
 				}
 				if (!customitems.isEmpty()) {
 					for (int i=0;i < customitems.size();i++)
