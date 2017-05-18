@@ -1,6 +1,6 @@
 name: HLR
 description: A plugin which adds a special type of Hoppers which collects configurable drops instantly, reducing lag and avoiding drop loss.
-version: 1.0.0
+version: 1.0.2
 author: despawningbone
 
 main: me.despawningbone.HLR.HLRmain
