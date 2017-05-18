@@ -16,33 +16,60 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.ItemSpawnEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta; 
 
 
 public class CHlistener implements Listener {
 	
 	private HLRmain plugin;
+	
 
 	public CHlistener(HLRmain instance) {
 		plugin = instance;
 	}
 
+	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onBlockPlace(BlockPlaceEvent event){
 		Player player = (Player) event.getPlayer();
 	    String world = event.getBlock().getWorld().getName();
-		ItemMeta blockMeta = player.getItemInHand().getItemMeta();
-		ItemStack block = player.getItemInHand();
-		if(blockMeta.hasDisplayName() && block.getType() == Material.HOPPER)
-		{	
-			if(blockMeta.getDisplayName().equals(HLRmain.CHname)){
+	    ItemStack Mblock; ItemStack Oblock; EquipmentSlot PHand = null; 
+	    boolean old = false; boolean inMain = false; boolean inOff = false;
+	    //plugin.log.info(HLRmain.ver.split("\\.")[1]);   //debug
+	    if(Integer.parseInt(HLRmain.ver.split("\\.")[1].trim()) >= 9) {
+	    	//plugin.log.info("dual-wielding");   //debug
+			Mblock = player.getInventory().getItemInMainHand();
+			Oblock = player.getInventory().getItemInOffHand();
+			PHand = event.getHand();
+	    } else {
+	    	//plugin.log.info("old school");  //debug
+	    	Mblock = player.getItemInHand();
+	    	Oblock = Mblock;
+	    	old = true;
+	    }
+	    if(Mblock.hasItemMeta()) {
+	    	if(Mblock.getItemMeta().hasDisplayName() && Mblock.getItemMeta().hasLore() && Mblock.getType() == Material.HOPPER) {
+		    	if(Mblock.getItemMeta().getDisplayName().equals(HLRmain.CHname) && Mblock.getItemMeta().getLore().equals(HLRmain.hopperlore)) {
+		    		inMain = true;
+		    	}
+		    }	
+	    }
+	    if(Oblock.hasItemMeta()) {
+	    	if(Oblock.getItemMeta().hasDisplayName() && Oblock.getItemMeta().hasLore() && Oblock.getType() == Material.HOPPER) {
+		    	if(Oblock.getItemMeta().getDisplayName().equals(HLRmain.CHname) && Oblock.getItemMeta().getLore().equals(HLRmain.hopperlore)) {
+		    		inOff = true;
+		    	}
+		    }	
+	    }
+
+		if(inMain || inOff) {
+			if(old || (inMain && PHand == EquipmentSlot.HAND) || (inOff && PHand == EquipmentSlot.OFF_HAND)) {
 				File DataFile = new File(plugin.getDataFolder() + File.separator
 						+ "Data.yml");
-				YamlConfiguration DFile = YamlConfiguration.loadConfiguration(DataFile);;
-				if(plugin.isEnabledIn(world))
-				{
+				YamlConfiguration DFile = YamlConfiguration.loadConfiguration(DataFile);
+				if(plugin.isEnabledIn(world)) {
 				    double x = event.getBlock().getX();
 				    double y = event.getBlock().getY();
 				    double z = event.getBlock().getZ();
@@ -64,8 +91,8 @@ public class CHlistener implements Listener {
 				} else {
 					player.sendMessage(HLRmain.CHname + ChatColor.RED + " is not enabled in this world!");
 					event.setCancelled(true);
-				}
-			}	
+				}	
+			}
 		}
 	}
 	@EventHandler
@@ -91,6 +118,8 @@ public class CHlistener implements Listener {
 			    List<String> coordlist = DFile.getStringList(world);
 			    coordlist.remove(coord);
 			    DFile.set(world, coordlist);
+			    event.setCancelled(true);
+			    event.getBlock().breakNaturally();
 			    player.sendMessage(ChatColor.RED + "You destroyed a " + HLRmain.CHname + ChatColor.RED + "!");
 			    try {
 		            DFile.save(plugin.getDataFolder() + File.separator
@@ -104,11 +133,14 @@ public class CHlistener implements Listener {
 	@EventHandler
 	public void onItemSpawn(ItemSpawnEvent event){
 		ItemStack item = event.getEntity().getItemStack();
+		ItemStack sitem = item.clone();
+		sitem.setAmount(1);
+		//plugin.log.info("triggered");  //debug
 		//plugin.log.info(item.getType().toString());   //debug
 	    World world = event.getEntity().getWorld();
 	    String worldname = world.getName();
 		//plugin.log.info(worldname);   //debug
-		if(ConfigHandler.itemList.contains(item) && plugin.isEnabledIn(worldname)){
+		if(ConfigHandler.itemList.contains(sitem) && plugin.isEnabledIn(worldname)){
 			File DataFile = new File(plugin.getDataFolder() + File.separator
 					+ "Data.yml");
 			YamlConfiguration DFile = YamlConfiguration.loadConfiguration(DataFile);
@@ -142,12 +174,29 @@ public class CHlistener implements Listener {
 					Location blockcoord = new Location(world , blockx, blocky, blockz);
 					//plugin.log.info(blockcoord.getBlock().getType().toString());   //debug
 					Block block = blockcoord.getBlock();
-					Hopper hopper = (Hopper) block.getState();				
-					Inventory hopperInv = hopper.getInventory();
-					if(hopperInv.firstEmpty() != -1){
-						event.getEntity().remove();
-						hopperInv.addItem(item);
-						break;
+					Hopper hopper = null;
+					boolean retry = false;
+					try {
+						hopper = (Hopper) block.getState();	
+					} catch (ClassCastException e) {
+						list.remove(coord);
+						DFile.set(worldname, list);
+					    try {
+				            DFile.save(plugin.getDataFolder() + File.separator
+				    				+ "Data.yml");
+				        } catch (IOException e1) {
+				            e.printStackTrace();
+				        }
+						retry = true;
+					}
+					if(!retry) {
+						Inventory hopperInv = hopper.getInventory();
+						if(hopperInv.firstEmpty() != -1){
+							//plugin.log.info("Hopper got space");   //debug
+							event.getEntity().remove();
+							hopperInv.addItem(item);
+							break;
+						}
 					}
 				}
 			}
