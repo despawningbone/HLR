@@ -23,6 +23,7 @@ public class HLRmain extends JavaPlugin {
 	public HLRCommandMain HLRCM = new HLRCommandMain(this);
 	public HLRSubCommand HLRSC = new HLRSubCommand(this);
 	
+	public static String ver;
 	public static String CHname;
 	public static List<String> hopperlore = new ArrayList<String>();
 	//public static String CHname = ChatColor.GREEN + "Crop " + ChatColor.WHITE + "Hopper";
@@ -50,6 +51,11 @@ public class HLRmain extends JavaPlugin {
 		configHandler.initConfigValues();
 		PluginManager pm = getServer().getPluginManager();
 		pm.registerEvents(listener, this);
+		
+		ver = this.getServer().getVersion().toString().split("MC: ")[1].replaceAll("\\)", "");
+		
+	    //log.info(plugin.getServer().getVersion().toString());   //debug
+	    //log.info(ver);   //debug
 		//log.info("getting commands...");    //debug
 		getCommand("converthopper").setExecutor(HLRCM);
 		getCommand("converthopper").setAliases(Arrays.asList(commandAliases));
