@@ -30,6 +30,7 @@ public class HLRCommandMain implements CommandExecutor {
 	static String playername;
 	static Player recipient; 
 	
+	@SuppressWarnings("deprecation")
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
 			boolean convert = false;
 			configHandler = new ConfigHandler(plugin);
@@ -69,10 +70,15 @@ public class HLRCommandMain implements CommandExecutor {
 					}
 				}
 			}
-
 			if (canUseCommand) {
-				ItemStack item = player.getItemInHand();
-				ItemMeta meta = player.getItemInHand().getItemMeta();
+				ItemStack item; ItemMeta meta;
+				if(Integer.parseInt(HLRmain.ver.split("\\.")[1].trim()) >= 9) {
+					item = player.getInventory().getItemInMainHand();
+					meta = player.getInventory().getItemInMainHand().getItemMeta();	
+				} else {
+					item = player.getItemInHand();
+					meta = player.getItemInHand().getItemMeta();
+				}
 				String CHname = HLRmain.CHname;
 				int maxamount = configHandler.maxamount;
 				if(configHandler.usePerms) {
@@ -83,8 +89,8 @@ public class HLRCommandMain implements CommandExecutor {
 					maxamount = 64;
 				}
 				if(!configHandler.cooldown || !start) {
-					if(player.getItemInHand().getType().equals(Material.HOPPER)){
-						if(player.getItemInHand().getAmount() <= maxamount) {
+					if(item.getType().equals(Material.HOPPER)){
+						if(item.getAmount() <= maxamount) {
 							if (meta.hasDisplayName() && meta.hasLore()){
 								if(!meta.getDisplayName().equals(CHname) && !meta.getLore().equals(HLRmain.hopperlore)){
 									convert = true;
