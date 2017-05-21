@@ -1,16 +1,24 @@
 package me.despawningbone.HLR;
 
 import java.io.File;
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import me.despawningbone.HLR.HLRmain;
 import net.md_5.bungee.api.ChatColor;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 
 public class ConfigHandler {
@@ -57,13 +65,50 @@ public class ConfigHandler {
 			HLRmain.log.info("Config generated !");
 		}
 	}
-	public void createDataFile() {
+	public void initDataFile() {
 		File DataFile = new File(plugin.getDataFolder() + File.separator
 				+ "Data.yml");
 		if (!DataFile.exists()) {
 			// Tells console its creating a Data.yml
 			HLRmain.log.info("Cannot find Data.yml, Generating now....");
 			HLRmain.log.info("Data file generated !");
+		} else {	
+			YamlConfiguration DFile = YamlConfiguration.loadConfiguration(DataFile);
+			Iterator<String> i = DFile.getKeys(true).iterator();
+			while(i.hasNext()) {
+				String key = (String)i.next();
+				List<String> coords = DFile.getStringList(key);
+				List<Location> buffer = new ArrayList<Location>();
+				World world = Bukkit.getServer().getWorld(key);
+				for(int n = 0; n < coords.size(); n++) {
+					String[] c =  coords.get(n).split(",");
+					double x = Double.parseDouble(c[0]);
+					double y = Double.parseDouble(c[1]);
+					double z = Double.parseDouble(c[2]);
+					Location loc = new Location(world, x, y, z);
+					buffer.add(loc);
+					
+				}
+				/*for(int d = 0; d < buffer.size(); d++) {   //debug
+					plugin.log.info("Buffer: " + buffer.get(d).toString());
+				}*/
+				for(int n = 0; n < buffer.size(); n++) {
+					Location loc = buffer.get(n);
+					Map.Entry<World, Chunk> entry = new AbstractMap.SimpleEntry<World, Chunk>(world, loc.getChunk());
+					if (!CHlistener.blockInfo.containsKey(entry)) {
+					    List<Location> list = new ArrayList<Location>();
+					    list.add(loc);
+
+					    CHlistener.blockInfo.put(entry, list);
+					} else {
+					    CHlistener.blockInfo.get(entry).add(loc);
+					}
+					/*for(int d = 0; d < CHlistener.blockInfo.get(entry).size(); d++) {   //debug
+						plugin.log.info(CHlistener.blockInfo.get(entry).get(d).toString());
+					}*/
+				}
+				//HLRmain.log.info("Looped");
+			}
 		}
 	}
 
@@ -160,10 +205,23 @@ public class ConfigHandler {
 				if (!customitems.isEmpty()) {
 					for (int i=0;i < customitems.size();i++)
 					{
-						String itemname = customitems.get(i);
-						itemname.toUpperCase();
+						String item = customitems.get(i);
+						String itemname = null; String dv = null;
+						boolean nodv = false;
+						try {
+							itemname = item.split(":")[0];
+							dv = item.split(":")[1];
+						} catch (ArrayIndexOutOfBoundsException e) {
+							itemname = item;
+							nodv = true;
+						}
+						itemname = itemname.toUpperCase();
 						Material material = Material.getMaterial(itemname);
-						itemList.add(new ItemStack(material));
+						if(nodv) {	
+							itemList.add(new ItemStack(material));
+						} else {
+							itemList.add(new ItemStack(material, 1, (short)Short.parseShort(dv)));
+						}
 					}
 				} /* else {
 				    //log.info("custom item list is Empty"); // debug
