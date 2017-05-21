@@ -1,14 +1,18 @@
 package me.despawningbone.HLR;
 
 import java.io.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.bukkit.block.Hopper;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -25,6 +29,8 @@ public class CHlistener implements Listener {
 	
 	private HLRmain plugin;
 	
+	public static HashMap<Entry<World, Chunk>, List<Location>> blockInfo = new HashMap<Entry<World, Chunk>, List<Location>>	();
+	
 
 	public CHlistener(HLRmain instance) {
 		plugin = instance;
@@ -35,41 +41,41 @@ public class CHlistener implements Listener {
 	public void onBlockPlace(BlockPlaceEvent event){
 		Player player = (Player) event.getPlayer();
 	    String world = event.getBlock().getWorld().getName();
-	    ItemStack Mblock; ItemStack Oblock; EquipmentSlot PHand = null; 
-	    boolean old = false; boolean inMain = false; boolean inOff = false;
-	    //plugin.log.info(HLRmain.ver.split("\\.")[1]);   //debug
-	    if(Integer.parseInt(HLRmain.ver.split("\\.")[1].trim()) >= 9) {
-	    	//plugin.log.info("dual-wielding");   //debug
-			Mblock = player.getInventory().getItemInMainHand();
-			Oblock = player.getInventory().getItemInOffHand();
-			PHand = event.getHand();
-	    } else {
-	    	//plugin.log.info("old school");  //debug
-	    	Mblock = player.getItemInHand();
-	    	Oblock = Mblock;
-	    	old = true;
-	    }
-	    if(Mblock.hasItemMeta()) {
-	    	if(Mblock.getItemMeta().hasDisplayName() && Mblock.getItemMeta().hasLore() && Mblock.getType() == Material.HOPPER) {
-		    	if(Mblock.getItemMeta().getDisplayName().equals(HLRmain.CHname) && Mblock.getItemMeta().getLore().equals(HLRmain.hopperlore)) {
-		    		inMain = true;
-		    	}
-		    }	
-	    }
-	    if(Oblock.hasItemMeta()) {
-	    	if(Oblock.getItemMeta().hasDisplayName() && Oblock.getItemMeta().hasLore() && Oblock.getType() == Material.HOPPER) {
-		    	if(Oblock.getItemMeta().getDisplayName().equals(HLRmain.CHname) && Oblock.getItemMeta().getLore().equals(HLRmain.hopperlore)) {
-		    		inOff = true;
-		    	}
-		    }	
-	    }
+		if(plugin.isEnabledIn(world)) {
+		    ItemStack Mblock; ItemStack Oblock; EquipmentSlot PHand = null; 
+		    boolean old = false; boolean inMain = false; boolean inOff = false;
+		    //plugin.log.info(HLRmain.ver.split("\\.")[1]);   //debug
+		    if(Integer.parseInt(HLRmain.ver.split("\\.")[1].trim()) >= 9) {
+		    	//plugin.log.info("dual-wielding");   //debug
+				Mblock = player.getInventory().getItemInMainHand();
+				Oblock = player.getInventory().getItemInOffHand();
+				PHand = event.getHand();
+		    } else {
+		    	//plugin.log.info("old school");  //debug
+		    	Mblock = player.getItemInHand();
+		    	Oblock = Mblock;
+		    	old = true;
+		    }
+		    if(Mblock.hasItemMeta()) {
+		    	if(Mblock.getItemMeta().hasDisplayName() && Mblock.getItemMeta().hasLore() && Mblock.getType() == Material.HOPPER) {
+			    	if(Mblock.getItemMeta().getDisplayName().equals(HLRmain.CHname) && Mblock.getItemMeta().getLore().equals(HLRmain.hopperlore)) {
+			    		inMain = true;
+			    	}
+			    }	
+		    }
+		    if(Oblock.hasItemMeta()) {
+		    	if(Oblock.getItemMeta().hasDisplayName() && Oblock.getItemMeta().hasLore() && Oblock.getType() == Material.HOPPER) {
+			    	if(Oblock.getItemMeta().getDisplayName().equals(HLRmain.CHname) && Oblock.getItemMeta().getLore().equals(HLRmain.hopperlore)) {
+			    		inOff = true;
+			    	}
+			    }	
+		    }
 
-		if(inMain || inOff) {
-			if(old || (inMain && PHand == EquipmentSlot.HAND) || (inOff && PHand == EquipmentSlot.OFF_HAND)) {
-				File DataFile = new File(plugin.getDataFolder() + File.separator
-						+ "Data.yml");
-				YamlConfiguration DFile = YamlConfiguration.loadConfiguration(DataFile);
-				if(plugin.isEnabledIn(world)) {
+			if(inMain || inOff) {
+				if(old || (inMain && PHand == EquipmentSlot.HAND) || (inOff && PHand == EquipmentSlot.OFF_HAND)) {
+					File DataFile = new File(plugin.getDataFolder() + File.separator
+							+ "Data.yml");
+					YamlConfiguration DFile = YamlConfiguration.loadConfiguration(DataFile);
 				    double x = event.getBlock().getX();
 				    double y = event.getBlock().getY();
 				    double z = event.getBlock().getZ();
@@ -78,6 +84,16 @@ public class CHlistener implements Listener {
 				    //player.sendMessage(String.valueOf(z));   //debug
 				    String coord = x + "," + y + "," + z;
 				    //player.sendMessage(coord);    //debug
+				    Location loc = event.getBlock().getLocation();
+				    Map.Entry<World, Chunk> entry = new AbstractMap.SimpleEntry<World, Chunk>(event.getBlock().getWorld(), event.getBlock().getLocation().getChunk());
+				    if (!CHlistener.blockInfo.containsKey(entry)) {
+					    List<Location> list = new ArrayList<Location>();
+					    list.add(loc);
+
+					    blockInfo.put(entry, list);
+					} else {
+					    blockInfo.get(entry).add(loc);
+					}	
 				    List<String> coordlist = DFile.getStringList(world);
 				    coordlist.add(coord);
 				    DFile.set(world, coordlist);
@@ -88,13 +104,14 @@ public class CHlistener implements Listener {
 			            e.printStackTrace();
 			        }
 					player.sendMessage(ChatColor.YELLOW + "You placed a " + HLRmain.CHname + ChatColor.YELLOW + "!");
-				} else {
-					player.sendMessage(HLRmain.CHname + ChatColor.RED + " is not enabled in this world!");
-					event.setCancelled(true);
-				}	
+				}
 			}
-		}
+		} else {
+			player.sendMessage(HLRmain.CHname + ChatColor.RED + " is not enabled in this world!");
+			event.setCancelled(true);
+		}	
 	}
+		
 	@EventHandler
 	public void onBlockBreak(BlockBreakEvent event){
 		Player player = (Player) event.getPlayer();
@@ -115,7 +132,12 @@ public class CHlistener implements Listener {
 		    //player.sendMessage(coord);    //debug
 			if(DFile.getStringList(world).contains(coord))
 			{
+				
+				Map.Entry<World, Chunk> entry = new AbstractMap.SimpleEntry<World, Chunk>(event.getBlock().getWorld(), event.getBlock().getLocation().getChunk());
+				blockInfo.get(entry).remove(event.getBlock().getLocation());
+				
 			    List<String> coordlist = DFile.getStringList(world);
+			    //plugin.log.info(coord);   //debug
 			    coordlist.remove(coord);
 			    DFile.set(world, coordlist);
 			    event.setCancelled(true);
@@ -141,46 +163,34 @@ public class CHlistener implements Listener {
 	    String worldname = world.getName();
 		//plugin.log.info(worldname);   //debug
 		if(ConfigHandler.itemList.contains(sitem) && plugin.isEnabledIn(worldname)){
-			File DataFile = new File(plugin.getDataFolder() + File.separator
-					+ "Data.yml");
-			YamlConfiguration DFile = YamlConfiguration.loadConfiguration(DataFile);
-			List<String> list = DFile.getStringList(worldname);
-			//plugin.log.info("this item is in the list.");   //debug
-			for (int i = 0; i < list.size(); i++) {
-				double itemx = event.getEntity().getLocation().getX();
-				double itemz = event.getEntity().getLocation().getZ();
-				String coord = list.get(i);
-				//plugin.log.info(coord);   //debug
-				String[] coords =  coord.split(",");
-				double blockx = Double.parseDouble(coords[0]);
-				double blocky = Double.parseDouble(coords[1]);
-				double blockz = Double.parseDouble(coords[2]);
-				//plugin.log.info(String.valueOf(blockx));   //debug
-				//plugin.log.info(String.valueOf(blocky));   //debug
-				//plugin.log.info(String.valueOf(blockz));   //debug
-				//plugin.log.info(String.valueOf(itemx));   //debug
-				//plugin.log.info(String.valueOf(itemz));   //debug
-				double bchunkx = Math.floor(blockx / 16);
-				double bchunkz = Math.floor(blockz / 16);
-				double ichunkx = Math.floor(itemx / 16);
-				double ichunkz = Math.floor(itemz / 16);
-				Chunk blockChunk = world.getChunkAt((int) bchunkx,(int) bchunkz);
-				Chunk itemChunk = world.getChunkAt((int) ichunkx,(int) ichunkz);
-				//plugin.log.info(itemChunk.toString()); //debug
-				//plugin.log.info(blockChunk.toString());  //debug
-				//plugin.log.info(String.valueOf(itemChunk.equals(blockChunk))); //debug
-				if(itemChunk == blockChunk){
-					//plugin.log.info("found hopper in chunk of item");   //debug
-					Location blockcoord = new Location(world , blockx, blocky, blockz);
-					//plugin.log.info(blockcoord.getBlock().getType().toString());   //debug
-					Block block = blockcoord.getBlock();
+			World w = event.getEntity().getWorld();
+			Chunk c = event.getEntity().getLocation().getChunk();
+			//plugin.log.info(event.getEntity().getLocation().getChunk().toString());   //debug
+			Map.Entry<World, Chunk> entry = new AbstractMap.SimpleEntry<World, Chunk>(w, c);
+			boolean notinChunk = false;
+			List<Location> loc = null;
+			try {
+				loc = blockInfo.get(entry);	
+				loc.size();   //check null or not
+			} catch (NullPointerException e) {
+				notinChunk = true;
+			}
+			if(!notinChunk) {
+				for(int i = 0; i < loc.size(); i++) {
 					Hopper hopper = null;
 					boolean retry = false;
 					try {
-						hopper = (Hopper) block.getState();	
+						hopper = (Hopper) loc.get(i).getBlock().getState();	
 					} catch (ClassCastException e) {
-						list.remove(coord);
-						DFile.set(worldname, list);
+						File DataFile = new File(plugin.getDataFolder() + File.separator
+								+ "Data.yml");
+						YamlConfiguration DFile = YamlConfiguration.loadConfiguration(DataFile);
+						String coord = loc.get(i).getBlockX() + ".0,"  + loc.get(i).getBlockY() + ".0," + loc.get(i).getBlockZ() + ".0";
+						blockInfo.get(entry).remove(loc.get(i));
+						//plugin.log.info(coord);  //debug
+						List<String> tmp = DFile.getStringList(worldname);
+						tmp.remove(coord);
+						DFile.set(worldname, tmp);
 					    try {
 				            DFile.save(plugin.getDataFolder() + File.separator
 				    				+ "Data.yml");
