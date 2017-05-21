@@ -65,9 +65,9 @@ public class HLRCommandMain implements CommandExecutor {
 					if(player.hasPermission("HLR.nofee")){
 						//player.sendMessage("no need to pay");   //debug
 						paying = false;		
-					} else if(player.isOp()) {
-						paying = false;
 					}
+				} else if(player.isOp()) {
+					paying = false;
 				}
 			}
 			if (canUseCommand) {
