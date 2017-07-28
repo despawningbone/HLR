@@ -30,7 +30,7 @@ public class HLRmain extends JavaPlugin {
 	public static List<String> enabledWorlds;
 	public ConfigHandler configHandler;
 	
-	 // tools that can be damaged
+	 // tools that can be damaged, reference only (maybe for later purposes)
 	/*public ArrayList<Integer> tools = new ArrayList<Integer>(Arrays.asList(
 			256, 257, 258, 259, 267, 268, 269, 270, 271, 272, 273, 274, 275,
 			276, 277, 278, 279, 283, 284, 285, 286, 290, 291, 292, 293, 294,
