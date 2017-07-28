@@ -32,7 +32,7 @@ public class HLRCommandMain implements CommandExecutor {
 	
 	@SuppressWarnings("deprecation")
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
-			boolean convert = false;
+			boolean convert = true;
 			configHandler = new ConfigHandler(plugin);
 			//String sstart = String.valueOf(start);   //debug
 			//sender.sendMessage(sstart);     //debug
@@ -91,20 +91,10 @@ public class HLRCommandMain implements CommandExecutor {
 				if(!configHandler.cooldown || !start) {
 					if(item.getType().equals(Material.HOPPER)){
 						if(item.getAmount() <= maxamount) {
-							if (meta.hasDisplayName() && meta.hasLore()){
-								if(!meta.getDisplayName().equals(CHname) && !meta.getLore().equals(HLRmain.hopperlore)){
-									convert = true;
+							if (meta.hasLore() && meta.hasDisplayName()){
+								if(meta.getLore().equals(HLRmain.hopperlore) || meta.getDisplayName().equals(HLRmain.CHname)){
+									convert = false;
 								}
-							} else if (meta.hasDisplayName()){
-								if(!meta.getDisplayName().equals(CHname)){
-									convert = true;
-								}
-							} else if (meta.hasLore()){
-								if(!meta.getLore().equals(HLRmain.hopperlore)){
-									convert = true;
-								}
-							} else {
-								convert = true;
 							}
 							if(convert) {
 								meta.setDisplayName(CHname);
