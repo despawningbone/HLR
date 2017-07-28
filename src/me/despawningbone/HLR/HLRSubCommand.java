@@ -1,15 +1,9 @@
 package me.despawningbone.HLR;
 
-import java.io.File;
-import java.util.UUID;
-import org.bukkit.configuration.file.YamlConfiguration;
-
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerJoinEvent;
 
 public class HLRSubCommand implements CommandExecutor {
 	private HLRmain plugin;
@@ -18,18 +12,6 @@ public class HLRSubCommand implements CommandExecutor {
 		plugin = instance;
 	}
 	
-	public void onPlayerJoin(PlayerJoinEvent event) {
-		File DataFile = new File(plugin.getDataFolder() + File.separator
-				+ "Data.yml");
-		Player player = event.getPlayer();
-		YamlConfiguration DFile = YamlConfiguration.loadConfiguration(DataFile);
-		UUID uuid = player.getUniqueId();
-		String suuid = uuid.toString();
-		if(!DFile.isSet(suuid)){
-			DFile.createSection(suuid);
-			DFile.set(suuid, false);
-		}
-	}
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
 			ConfigHandler configHandler = new ConfigHandler(plugin);
 			if (args.length <= 0){
