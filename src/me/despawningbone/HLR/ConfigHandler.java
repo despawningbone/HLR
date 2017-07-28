@@ -6,13 +6,13 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 import me.despawningbone.HLR.HLRmain;
 import net.md_5.bungee.api.ChatColor;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -43,7 +43,7 @@ public class ConfigHandler {
 	public static Logger log = HLRmain.log;   //debug
 	
 	/**
-	 * Constuctor for ConfigHandler, Runs the createConfig() method.
+	 * Constuctor for ConfigHandler, Runs the createConfig() and getConfigValue() methods.
 	 */
 	public ConfigHandler(HLRmain instance) {
 		plugin = instance;
@@ -80,6 +80,10 @@ public class ConfigHandler {
 				List<String> coords = DFile.getStringList(key);
 				List<Location> buffer = new ArrayList<Location>();
 				World world = Bukkit.getServer().getWorld(key);
+				if(world == null) {
+					HLRmain.log.info("Could not load the world " + key + "! Skipping...");
+					continue;
+				}
 				for(int n = 0; n < coords.size(); n++) {
 					String[] c =  coords.get(n).split(",");
 					double x = Double.parseDouble(c[0]);
@@ -94,7 +98,7 @@ public class ConfigHandler {
 				}*/
 				for(int n = 0; n < buffer.size(); n++) {
 					Location loc = buffer.get(n);
-					Map.Entry<World, Chunk> entry = new AbstractMap.SimpleEntry<World, Chunk>(world, loc.getChunk());
+					Map.Entry<UUID, String> entry = new AbstractMap.SimpleEntry<UUID, String>(world.getUID(), loc.getChunk().toString());
 					if (!CHlistener.blockInfo.containsKey(entry)) {
 					    List<Location> list = new ArrayList<Location>();
 					    list.add(loc);
@@ -103,6 +107,8 @@ public class ConfigHandler {
 					} else {
 					    CHlistener.blockInfo.get(entry).add(loc);
 					}
+					//HLRmain.log.info(entry.getKey().toString());   //debug
+					//HLRmain.log.info(entry.getValue());   //debug
 					/*for(int d = 0; d < CHlistener.blockInfo.get(entry).size(); d++) {   //debug
 						plugin.log.info(CHlistener.blockInfo.get(entry).get(d).toString());
 					}*/
