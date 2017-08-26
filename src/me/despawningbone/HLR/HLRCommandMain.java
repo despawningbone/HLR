@@ -1,5 +1,7 @@
 package me.despawningbone.HLR;
 
+import java.util.HashMap;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -21,24 +23,19 @@ public class HLRCommandMain implements CommandExecutor {
 	}
 	
 	public static boolean confirm = false;
-	public static boolean start = false;
-	public static Player executor;
+	public static HashMap<Player, Boolean> start = new HashMap<Player, Boolean>();
 	public ConfigHandler configHandler;
-	
-	static boolean canUseCommand = true;
-	static boolean paying = false;
-	static String playername;
-	static Player recipient; 
 	
 	@SuppressWarnings("deprecation")
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
+			boolean canUseCommand = true;
+			boolean paying = false;
 			boolean convert = true;
 			configHandler = new ConfigHandler(plugin);
 			//String sstart = String.valueOf(start);   //debug
 			//sender.sendMessage(sstart);     //debug
 			if (sender instanceof Player) {
 			Player player = (Player) sender;
-			executor = player;
 			double fee = configHandler.fee;
 			boolean useEco = configHandler.useEco;
 
@@ -88,7 +85,10 @@ public class HLRCommandMain implements CommandExecutor {
 				} else if(player.isOp()) {
 					maxamount = 64;
 				}
-				if(!configHandler.cooldown || !start) {
+				if(start.isEmpty() || !start.containsKey(player)) {
+					start.put(player, false);
+				}
+				if(!configHandler.cooldown || !start.get(player)) {
 					if(item.getType().equals(Material.HOPPER)){
 						if(item.getAmount() <= maxamount) {
 							if (meta.hasLore() && meta.hasDisplayName()){
@@ -105,15 +105,15 @@ public class HLRCommandMain implements CommandExecutor {
 									if(configHandler.usePerms) {
 										if(!player.hasPermission("HLR.nocooldown")) {
 											//player.sendMessage("Start-nperms");  //debug
-											start = true;
+											start.put(player, true);
 											Timer timer = new Timer();
-											timer.main(args);			
+											timer.main(player);			
 										}
 									} else if(!player.isOp()) {
 										//player.sendMessage("Start-nop");  //debug
-										start = true;
+										start.put(player, true);
 										Timer timer = new Timer();
-										timer.main(args);
+										timer.main(player);
 									}
 								}
 								if (paying) {
