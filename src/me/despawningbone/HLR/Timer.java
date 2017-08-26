@@ -6,12 +6,11 @@ import org.bukkit.entity.Player;
 
 public class Timer {
 	public static int taskid;
-    public void main(String args[]) {
+    public void main(Player player) {
         taskid = Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("HLR"), new Runnable() {
             @Override
             public void run() {
-            		HLRCommandMain.start = false;
-                    Player player = HLRCommandMain.executor;
+            		HLRCommandMain.start.put(player, false);
                     player.sendMessage(ChatColor.YELLOW + "You can now use /converthopper again.");    	
             }
         }, ConfigHandler.time);
