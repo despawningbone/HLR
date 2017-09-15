@@ -2,7 +2,6 @@ package me.despawningbone.HLR;
 
 import java.util.HashMap;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -49,13 +48,13 @@ public class HLRCommandMain implements CommandExecutor {
 					canUseCommand = player.hasPermission("HLR.convert");
 			}
 			if (!canUseCommand)
-				sender.sendMessage(ChatColor.RED + "You don't have permissions to do that.");
+				sender.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("ConvertCmd.NoPermsConvert"));
 
 			if (canUseCommand && fee > 0 && useEco) {
 				paying = true;
 				if (money < fee) {
 					canUseCommand = false;
-					player.sendMessage(ChatColor.RED + "You don't have enough money to convert the hopper.");
+					player.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("ConvertCmd.NoMoneyConvert"));
 				}
 
 				if(configHandler.usePerms){
@@ -100,7 +99,7 @@ public class HLRCommandMain implements CommandExecutor {
 								meta.setDisplayName(CHname);
 								meta.setLore(HLRmain.hopperlore);
 								item.setItemMeta(meta);
-								player.sendMessage(ChatColor.GREEN + "Successfully converted the hopper to a " + ChatColor.YELLOW + ChatColor.stripColor(HLRmain.CHname) + ChatColor.GREEN + "!");
+								player.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("ConvertCmd.ConvertSuccess"));
 								if(configHandler.cooldown) {
 									if(configHandler.usePerms) {
 										if(!player.hasPermission("HLR.nocooldown")) {
@@ -119,23 +118,23 @@ public class HLRCommandMain implements CommandExecutor {
 								if (paying) {
 										HLRmain.econ.withdrawPlayer(player, fee);
 										paying = false;
-										player.sendMessage(ChatColor.BLUE + "This transaction cost you " + ChatColor.GOLD + "$" + ChatColor.GREEN + fee + ChatColor.BLUE + ".");
+										player.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("ConvertCmd.TransactionCost"));
 								}
 							} else {
-								player.sendMessage(ChatColor.RED + "You have already converted the hopper.");
+								player.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("ConvertCmd.ConvertedHopper"));
 							}
 						} else {
-							player.sendMessage(ChatColor.RED + "You cannot convert more than " + ChatColor.YELLOW + configHandler.maxamount + ChatColor.RED + " hoppers at once.");
+							player.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("ConvertCmd.TooMuchHopperAtOnce"));
 						}
 					} else {
-						player.sendMessage(ChatColor.RED + "You are not holding a hopper right now.");
+						player.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("ConvertCmd.NotHoldingHopper"));
 					}
 				} else {
-					player.sendMessage(ChatColor.RED + "This command is still cooling down.");
+					player.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("ConvertCmd.StillCoolingDown"));
 				}
 			} 
 		} else {
-			sender.sendMessage(ChatColor.RED + "This is a player only command.");
+			sender.sendMessage(ConfigHandler.msgMap.get("ConvertCmd.PlayerUseOnly"));
 		}
 		return true;
 	}
