@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -87,27 +86,32 @@ public class CHlistener implements Listener {
 				    //player.sendMessage(coord);    //debug
 				    Location loc = event.getBlock().getLocation();
 				    Map.Entry<UUID, String> entry = new AbstractMap.SimpleEntry<UUID, String>(event.getBlock().getWorld().getUID(), event.getBlock().getLocation().getChunk().toString());
-				    if (!CHlistener.blockInfo.containsKey(entry)) {
-					    List<Location> list = new ArrayList<Location>();
-					    list.add(loc);
-
-					    blockInfo.put(entry, list);
-					} else {
-					    blockInfo.get(entry).add(loc);
-					}	
-				    List<String> coordlist = DFile.getStringList(world);
-				    coordlist.add(coord);
-				    DFile.set(world, coordlist);
-				    try {
-			            DFile.save(plugin.getDataFolder() + File.separator
-			    				+ "Data.yml");
-			        } catch (IOException e) {
-			            e.printStackTrace();
-			        }
-					player.sendMessage(ChatColor.YELLOW + "You placed a " + HLRmain.CHname + ChatColor.YELLOW + "!");
+				    if(!CHlistener.blockInfo.containsKey(entry) || ConfigHandler.chunkHopperLimit == -1 || CHlistener.blockInfo.get(entry).size() < ConfigHandler.chunkHopperLimit) {
+				    	if (!CHlistener.blockInfo.containsKey(entry)) {
+						    List<Location> list = new ArrayList<Location>();
+						    list.add(loc);
+						    
+						    blockInfo.put(entry, list);
+						} else {
+							blockInfo.get(entry).add(loc);
+						}	
+						List<String> coordlist = DFile.getStringList(world);
+					    coordlist.add(coord);
+					    DFile.set(world, coordlist);
+					    try {
+				            DFile.save(plugin.getDataFolder() + File.separator
+				    				+ "Data.yml");
+				        } catch (IOException e) {
+				            e.printStackTrace();
+				        }
+						player.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("Listener.PlacedHopper"));	
+				    } else {
+				    	event.setCancelled(true);
+				    	player.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("Listener.HopperLimitReached"));
+				    }
 				}
 			} else {
-				player.sendMessage(HLRmain.CHname + ChatColor.RED + " is not enabled in this world!");
+				player.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("Listener.NotEnabledInWorld"));
 				event.setCancelled(true);
 			}
 		}
@@ -118,8 +122,7 @@ public class CHlistener implements Listener {
 		Player player = (Player) event.getPlayer();
 	    String world = event.getBlock().getWorld().getName();
 		//player.sendMessage(world);
-		if(plugin.isEnabledIn(world))
-		{	
+		if(plugin.isEnabledIn(world)) {   //Note: it would cause problems if a tweaked hopper is still in disabled world and destroyed and then someone re-enabled the world 	
 			File DataFile = new File(plugin.getDataFolder() + File.separator
 					+ "Data.yml");
 			YamlConfiguration DFile = YamlConfiguration.loadConfiguration(DataFile);
@@ -147,7 +150,7 @@ public class CHlistener implements Listener {
 				    DFile.set(world, coordlist);
 				    event.setCancelled(true);
 				    event.getBlock().breakNaturally();
-				    player.sendMessage(ChatColor.RED + "You destroyed a " + HLRmain.CHname + ChatColor.RED + "!");
+				    player.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("Listener.DestroyedHopper"));
 				    try {
 			            DFile.save(plugin.getDataFolder() + File.separator
 			    				+ "Data.yml");
