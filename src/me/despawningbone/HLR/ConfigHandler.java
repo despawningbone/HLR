@@ -1,24 +1,34 @@
 package me.despawningbone.HLR;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.logging.Logger;
 
 import me.despawningbone.HLR.HLRmain;
-import net.md_5.bungee.api.ChatColor;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.MemorySection;
 import org.bukkit.inventory.ItemStack;
 
 public class ConfigHandler {
@@ -34,10 +44,13 @@ public class ConfigHandler {
 	boolean usePerms;
 	static long time;
 	boolean cooldown;
+	public static String prefix;
+	public static HashMap<String, String> msgMap = new HashMap<String, String>(); 
 	List<String> customitems;
 	String tempname; 
 	List<String> hopperlore;
 	int maxamount;
+	public static int chunkHopperLimit;
 	public static ArrayList<ItemStack> itemList = new ArrayList<ItemStack>();
 	
 	public static Logger log = HLRmain.log;   //debug
@@ -62,16 +75,18 @@ public class ConfigHandler {
 			// Tells console its creating a config.yml
 			HLRmain.log.info("Cannot find config.yml, Generating now....");
 			plugin.saveDefaultConfig();
-			HLRmain.log.info("Config generated !");
+			HLRmain.log.info("Config generated!");
 		}
 	}
+	
 	public void initDataFile() {
 		File DataFile = new File(plugin.getDataFolder() + File.separator
 				+ "Data.yml");
 		if (!DataFile.exists()) {
 			// Tells console its creating a Data.yml
 			HLRmain.log.info("Cannot find Data.yml, Generating now....");
-			HLRmain.log.info("Data file generated !");
+			YamlConfiguration.loadConfiguration(DataFile);  //TODO check if really works, if does remove this comment
+			HLRmain.log.info("Data file generated!");
 		} else {	
 			YamlConfiguration DFile = YamlConfiguration.loadConfiguration(DataFile);
 			Iterator<String> i = DFile.getKeys(true).iterator();
@@ -130,6 +145,7 @@ public class ConfigHandler {
 		config = plugin.getConfig();
 		getConfigValues();
 		initConfigValues();
+		initMsgFile();
 		sender.sendMessage(message);
 	}
 	
@@ -154,7 +170,54 @@ public class ConfigHandler {
 	/**
 	 * Gets all configuration values
 	 */
+	@SuppressWarnings("unused")
+	public void initMsgFile() {  //known bug: if the messages keys are updated in config it will just show null
+		File MsgFile = new File(plugin.getDataFolder() + File.separator + "messages.yml");
+		if(!MsgFile.exists()) {
+			HLRmain.log.info("Cannot find messages.yml, Generating now....");
+			try {
+				MsgFile.createNewFile();
+			    InputStream defMsgFile = plugin.getResource("messages.yml");
+			    Files.copy(defMsgFile, Paths.get(MsgFile.getPath()), StandardCopyOption.REPLACE_EXISTING);
+			    defMsgFile.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			HLRmain.log.info("Message file generated!");
+		}
+		InputStream def = plugin.getResource("messages.yml");
+		YamlConfiguration defcfg = YamlConfiguration.loadConfiguration(new InputStreamReader(def));
+		YamlConfiguration cfg = YamlConfiguration.loadConfiguration(MsgFile);
+		if(!defcfg.getKeys(true).equals(cfg.getKeys(true))) {
+			HLRmain.log.warning("Message File's keys are not the same.");
+			HLRmain.log.warning("This can mean that your configuration file is corrupted or was tempered with wrongly.");
+			HLRmain.log.warning("Please reset or remove the message file in order for it to work properly.");
+		}
+		prefix = ChatColor.translateAlternateColorCodes('&', cfg.getString("Prefix"));
+		ConfigurationSection cfgSec = cfg.getConfigurationSection("Msgs");
+		//TODO maybe add a check for keys so that whenever its changed alert the user
+		Map<String, Object> values = cfgSec.getValues(true);
+		for(Entry<String,Object> val : values.entrySet()) {
+			try {
+				MemorySection temp = (MemorySection) val.getValue();	
+			} catch (ClassCastException e) {
+				String valStr = (String) val.getValue();
+				String msg = ChatColor.translateAlternateColorCodes('&', valStr);
+				//Feel free to suggest any placeholders
+				msg = msg.replaceAll("%hoppername%", HLRmain.CHname).replaceAll("%fee%", String.valueOf(fee))
+						.replaceAll("%maxamount%", String.valueOf(maxamount)).replaceAll("%chunklimit%", String.valueOf(chunkHopperLimit));
+				msgMap.put(val.getKey(), msg);
+			}
+		}
+	}
+	
 	public void getConfigValues() {
+		YamlConfiguration defcfg = YamlConfiguration.loadConfiguration(new InputStreamReader(plugin.getResource("config.yml")));
+		if(!defcfg.getKeys(true).equals(config.getKeys(true))) {
+			HLRmain.log.warning("Config File's keys are not the same.");
+			HLRmain.log.warning("This can mean that your configuration file is corrupted or was tempered with wrongly.");
+			HLRmain.log.warning("Please reset or remove the config file in order for it to work properly.");
+		}
 		HLRmain.enabledWorlds = config.getStringList("Enabled-in-worlds");
 		useEco = config.getBoolean("Eco.Use");
 		fee = config.getDouble("Eco.Conversion-fee");
@@ -167,6 +230,7 @@ public class ConfigHandler {
 		useMobDrops = config.getBoolean("ItemList.Mob-drops");
 		useCrops = config.getBoolean("ItemList.Crops");
 		maxamount = config.getInt("Max-amount");
+		chunkHopperLimit = config.getInt("Chunk-HopperLimit");
 	}
 	
 	public void initConfigValues() {
