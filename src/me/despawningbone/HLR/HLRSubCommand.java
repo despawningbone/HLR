@@ -15,7 +15,7 @@ public class HLRSubCommand implements CommandExecutor {
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
 			ConfigHandler configHandler = new ConfigHandler(plugin);
 			if (args.length <= 0){
-				sender.sendMessage(ChatColor.RED + "Unknown argument. Please type /HLR help for the help menu.");
+				sender.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("SubCmds.UnknownArgument"));
 				return true;
 			} else {
 				if (args[0].equalsIgnoreCase("help")) {
@@ -30,15 +30,15 @@ public class HLRSubCommand implements CommandExecutor {
 					sender.sendMessage(ChatColor.RED + "/HLR about" + ChatColor.GRAY + " - " + ChatColor.YELLOW + "Displays the about page.");
 				} else if (args[0].equalsIgnoreCase("reload")) {
 					if (sender.hasPermission("HLR.reload")){
-						configHandler.reloadConfig(sender, ChatColor.BLUE + "HLR has been reloaded.");	
+						configHandler.reloadConfig(sender, ConfigHandler.prefix + ConfigHandler.msgMap.get("SubCmds.ReloadedPlugin"));	
 					} else {
-						sender.sendMessage(ChatColor.RED + "You do not have the permission to use this command.");
+						sender.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("SubCmds.NoPermsReload"));
 					}
 				} else if (args[0].equalsIgnoreCase("about")) {
 					sender.sendMessage(ChatColor.DARK_GRAY + "HLR" + ChatColor.GRAY + " Version: " + ChatColor.GREEN + "1.0.0");
 					sender.sendMessage(ChatColor.GOLD + "Made by " + ChatColor.DARK_BLUE + "despawningbone");
 				} else {
-					sender.sendMessage(ChatColor.RED + "Unknown argument. Please type /HLR help for the help menu.");
+					sender.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("SubCmds.UnknownArgument"));
 				}
 			}
 		return true;
