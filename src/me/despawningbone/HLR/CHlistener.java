@@ -9,20 +9,29 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
+import org.apache.commons.lang.StringUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.Hopper;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.ItemSpawnEvent;
+import org.bukkit.event.entity.SpawnerSpawnEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 
 public class CHlistener implements Listener {
@@ -30,6 +39,7 @@ public class CHlistener implements Listener {
 	private HLRmain plugin;
 	
 	public static HashMap<Entry<UUID, String>, List<Location>> blockInfo = new HashMap<Entry<UUID, String>, List<Location>>();
+	private static HashMap<Location, ItemStack> dropCheck = new HashMap<Location, ItemStack>();
 	
 
 	public CHlistener(HLRmain instance) {
@@ -37,8 +47,8 @@ public class CHlistener implements Listener {
 	}
 
 	@SuppressWarnings("deprecation")
-	@EventHandler
-	public void onBlockPlace(BlockPlaceEvent event){
+	@EventHandler(priority=EventPriority.HIGH, ignoreCancelled=true)
+	public void onBlockPlace(BlockPlaceEvent event) {
 		Player player = (Player) event.getPlayer();
 	    String world = event.getBlock().getWorld().getName();
 	    ItemStack Mblock; ItemStack Oblock; EquipmentSlot PHand = null; 
@@ -86,7 +96,7 @@ public class CHlistener implements Listener {
 				    //player.sendMessage(coord);    //debug
 				    Location loc = event.getBlock().getLocation();
 				    Map.Entry<UUID, String> entry = new AbstractMap.SimpleEntry<UUID, String>(event.getBlock().getWorld().getUID(), event.getBlock().getLocation().getChunk().toString());
-				    if(!CHlistener.blockInfo.containsKey(entry) || ConfigHandler.chunkHopperLimit == -1 || CHlistener.blockInfo.get(entry).size() < ConfigHandler.chunkHopperLimit) {
+				    if(!CHlistener.blockInfo.containsKey(entry) || ConfigHandler.chunkHopperLimit == -1 || CHlistener.blockInfo.get(entry).size() < ConfigHandler.chunkHopperLimit || player.hasPermission("HLR.nochunklimit")) {
 				    	if (!CHlistener.blockInfo.containsKey(entry)) {
 						    List<Location> list = new ArrayList<Location>();
 						    list.add(loc);
@@ -117,7 +127,7 @@ public class CHlistener implements Listener {
 		}
 	}
 		
-	@EventHandler
+	@EventHandler(priority=EventPriority.HIGH, ignoreCancelled=true)
 	public void onBlockBreak(BlockBreakEvent event){
 		Player player = (Player) event.getPlayer();
 	    String world = event.getBlock().getWorld().getName();
@@ -148,8 +158,17 @@ public class CHlistener implements Listener {
 				    //plugin.log.info(coord);   //debug
 				    coordlist.remove(coord);
 				    DFile.set(world, coordlist);
-				    event.setCancelled(true);
-				    event.getBlock().breakNaturally();
+				    ItemStack drop = new ItemStack(Material.HOPPER, 1);
+				    event.getBlock().breakNaturally(new ItemStack(Material.AIR));	
+				    ItemMeta meta = drop.getItemMeta();
+				    if(ConfigHandler.retainTweak) {
+					    meta.setDisplayName(HLRmain.CHname);
+					    meta.setLore(HLRmain.hopperlore);
+					    drop.setItemMeta(meta);	
+				    }
+				    event.getBlock().getLocation().getWorld().dropItemNaturally(event.getBlock().getLocation(), drop);
+				    /*event.setCancelled(true);
+				    event.getBlock().breakNaturally();*/
 				    player.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("Listener.DestroyedHopper"));
 				    try {
 			            DFile.save(plugin.getDataFolder() + File.separator
@@ -161,13 +180,88 @@ public class CHlistener implements Listener {
 			}
 		}
 	}
+	
+	@EventHandler
+	public void onSpawnerSpawn(SpawnerSpawnEvent event) {
+		if(!ConfigHandler.spawnerAllow && !ConfigHandler.spawnerWhitelist.contains(event.getEntityType())) {
+			Location loc = event.getLocation();	
+			if(!checkCHPresence(loc)) {
+				event.setCancelled(true);
+			}
+		}
+	}
+	
+	@EventHandler
+	public void onBlockFromTo(BlockFromToEvent event) {
+		if(!ConfigHandler.waterAllow && ConfigHandler.waterBlacklist.contains(event.getToBlock().getType())) {
+			Location loc = event.getToBlock().getLocation();	
+			if(!checkCHPresence(loc)) {
+				event.setCancelled(true);
+			}
+		}
+	}
+	
+	@EventHandler
+	public void onBlockPistonExtend(BlockPistonExtendEvent event) {
+		if(!ConfigHandler.pistonAllow) {
+			String blockStr = event.getBlocks().toString();
+			int index = StringUtils.indexOfAny(blockStr, ConfigHandler.strPistonBlacklist.toArray(new String[ConfigHandler.strPistonBlacklist.size()]));
+			if(index != -1) {
+				int i = StringUtils.countMatches(blockStr.substring(0, index), "type=");
+				Location loc = event.getBlocks().get(i - 1).getLocation();
+				if(!checkCHPresence(loc)) {
+					event.setCancelled(true);
+				}
+			}	
+		}
+	}
+	
+	@EventHandler
+	public void onBlockGrow(BlockGrowEvent event) {  //Is there a way to check if there is pistons nearby without repetitive checking?
+		if(!ConfigHandler.cactusAllow) {
+			BlockState state = event.getNewState();
+			if(state.getType() == Material.CACTUS) {
+				Block block = state.getBlock();
+				if(block.getRelative(BlockFace.NORTH).getType() != Material.AIR || block.getRelative(BlockFace.SOUTH).getType() != Material.AIR ||
+						block.getRelative(BlockFace.EAST).getType() != Material.AIR || block.getRelative(BlockFace.WEST).getType() != Material.AIR) {
+					if(!checkCHPresence(state.getLocation())) {
+						event.setCancelled(true);
+					}
+				}
+			}
+		}
+	}
+	
+	private boolean checkCHPresence(Location loc) {
+		Map.Entry<UUID, String> entry = new AbstractMap.SimpleEntry<UUID, String>(loc.getWorld().getUID(), loc.getChunk().toString());
+		if(!blockInfo.containsKey(entry) || blockInfo.get(entry).isEmpty()) {
+			//plugin.log.info("cancelling due to no crop hopper found...");   //debug
+			return false;
+		}
+		return true;
+	}
+	
+	@EventHandler
+	public void onPlayerDropItem(PlayerDropItemEvent event) {
+		if(!ConfigHandler.greedy) {  
+			if(plugin.isEnabledIn(event.getItemDrop().getLocation().getWorld().getName())){
+				dropCheck.put(event.getItemDrop().getLocation(), event.getItemDrop().getItemStack());
+			}
+		}
+	}
 	@EventHandler
 	public void onItemSpawn(ItemSpawnEvent event){   //suspecting world changes causes disruption
+		if(!ConfigHandler.greedy) {	
+			if(!dropCheck.isEmpty() && dropCheck.containsKey(event.getEntity().getLocation()) && dropCheck.get(event.getEntity().getLocation()).equals(event.getEntity().getItemStack())) {
+				dropCheck.remove(event.getEntity().getLocation());
+				return;
+			}
+		}
 		ItemStack item = event.getEntity().getItemStack();
 		ItemStack sitem = item.clone();
-		sitem.setAmount(1);
+		sitem.setItemMeta(Bukkit.getItemFactory().getItemMeta(sitem.getType()));
+		sitem.setAmount(1);  
 		//plugin.log.info("triggered");  //debug
-		//plugin.log.info(item.getType().toString());   //debug
 	    World world = event.getEntity().getWorld();
 	    String worldname = world.getName();
 		//plugin.log.info(worldname);   //debug
@@ -222,10 +316,20 @@ public class CHlistener implements Listener {
 					if(!retry) {
 						Inventory hopperInv = hopper.getInventory();
 						if(hopperInv.firstEmpty() != -1){
+							hopperInv.addItem(item);
 							//plugin.log.info("Hopper got space");   //debug
 							event.getEntity().remove();
-							hopperInv.addItem(item);
 							break;
+						} else {
+							HashMap<Integer, ItemStack> left = hopperInv.addItem(item);
+							if(!left.isEmpty()) {
+								int a = item.getAmount() - ((int) left.keySet().toArray()[0]);
+								ItemStack i2 = item.clone();
+								i2.setAmount(a);
+								hopperInv.removeItem(i2);
+							} else {
+								event.getEntity().remove();
+							}
 						}
 					}
 				}
