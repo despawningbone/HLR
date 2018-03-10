@@ -1,16 +1,17 @@
 name: HLR
 description: A plugin which adds a special type of Hoppers which collects configurable drops instantly, reducing lag and avoiding drop loss.
-version: 1.0.2
+version: 1.3.1
 author: despawningbone
 
 main: me.despawningbone.HLR.HLRmain
 softdepend: [Vault]
+load: POSTWORLD
 
 commands:
     converthopper:
         description: converts normal hopper to a specific one.
-        usage: /<command> [type]
+        usage: /<command>
         aliases: [chopper]
     hlr:
         description: sub-commands of this plugin.
-        usage: /<command> [help/about/reload]
+        usage: /<command> [help/give/about/reload]
