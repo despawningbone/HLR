@@ -1,5 +1,5 @@
 # -------------------------------
-#     HLR v1.0.0 config file
+#     HLR v1.3.1 config file
 #    Created by despawningbone
 # ------------------------------- 
 
@@ -18,17 +18,62 @@ ItemList:
   Mob-drops: true
   # Here you can add the custom items you want to be taken in by the tweaked hopper.
   # Please use Bukkit's material list's name.
+  # For those items with a damage value, please do the item name followed by a colon, as shown in example 2.
   Custom-items:
   # - EXAMPLE_MATERIAL
+  # - EXAMPLE_MATERIAL:1
     -
 
 # Here you can set how many hoppers can be converted at once.
 # e.g. Max-amount: 5, players can't convert a stack of hoppers with more than 5 hoppers in it.
 Max-amount: 10
 
-# Use permissions? Vault API required
+# Use permissions?
 Use-permissions: true
 
+# You can set how many tweaked hoppers can be in 1 chunk here.
+# set -1 for unlimited tweaked hoppers in one chunk.
+# any number is or larger than 16*16 will be the same as unlimited tweaked hoppers.
+Chunk-HopperLimit: -1
+
+# Retain the tweaked hopper or drop a new hopper upon tweaked hopper breaking?
+Retain-tweaked: false
+
+# Here you can set if player drops would be picked up by the hopper or not.
+Greedy-mode: false
+
+# To further reduce lag caused by farms, this forces the following types of farms
+# to only be able to work when a crop hopper is in the chunk.
+# Set to false to disable the farm type.
+Farm-tweaks:
+  #This refers to the initial spawning of entities by spawners, not their death.
+  Spawners:
+    Allow: true
+    #This allows specific types of spawners to still work under no crop hoppers.
+    Whitelist:
+      -
+  #This refers to every farms using a piston to break the crop.
+  Piston-farms:
+    Allow: false
+    #This blacklists the blocks you want pistons to not farm. Default is
+    #Pumpkin, Melon and Sugarcane. 
+    Blacklist:
+      - PUMPKIN
+      - MELON_BLOCK
+      - SUGAR_CANE_BLOCK
+  #This refers to every farms using water to break the crop.
+  Water-farms:
+    Allow: true
+    #This blacklists the blocks you want water to not flow and destroy. Default is
+    #Potato, Carrot, Wheat and Nether warts.
+    Blacklist:
+      - POTATO
+      - CARROT
+      - CROPS
+      - NETHER_WARTS
+  #This refers to the conventional method of cactus breaking by adjacent block.
+  Cactus-farms: true
+  
 # Enable /converthopper cooldown?
 Cooldown:
   Enable: false
