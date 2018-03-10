@@ -30,14 +30,13 @@ public class HLRCommandMain implements CommandExecutor {
 			boolean canUseCommand = true;
 			boolean paying = false;
 			boolean convert = true;
-			configHandler = new ConfigHandler(plugin);
+			configHandler = plugin.configHandler;
 			//String sstart = String.valueOf(start);   //debug
 			//sender.sendMessage(sstart);     //debug
 			if (sender instanceof Player) {
 			Player player = (Player) sender;
 			double fee = configHandler.fee;
 			boolean useEco = configHandler.useEco;
-
 			double money = 0;
 			if (useEco){
 				money = HLRmain.getMoney(player);
@@ -47,16 +46,15 @@ public class HLRCommandMain implements CommandExecutor {
 			if (configHandler.usePerms) {
 					canUseCommand = player.hasPermission("HLR.convert");
 			}
+			
 			if (!canUseCommand)
 				sender.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("ConvertCmd.NoPermsConvert"));
-
 			if (canUseCommand && fee > 0 && useEco) {
 				paying = true;
 				if (money < fee) {
 					canUseCommand = false;
 					player.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("ConvertCmd.NoMoneyConvert"));
 				}
-
 				if(configHandler.usePerms){
 					if(player.hasPermission("HLR.nofee")){
 						//player.sendMessage("no need to pay");   //debug
