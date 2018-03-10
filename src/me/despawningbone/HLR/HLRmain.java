@@ -48,6 +48,7 @@ public class HLRmain extends JavaPlugin {
 		log = getLogger();
 		configHandler = new ConfigHandler(this);
 		configHandler.initDataFile();
+		configHandler.getConfigValues();
 		configHandler.initConfigValues();
 		configHandler.initMsgFile();
 		PluginManager pm = getServer().getPluginManager();
