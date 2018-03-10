@@ -1,0 +1,53 @@
+# -------------------------------
+#     HLR v1.2.2 message file
+#    Created by despawningbone
+# ------------------------------- 
+
+# Here you can set the prefix that will appear before every message this plugin sends.
+#Prefix: "" # use this if you do not need any prefixes.
+Prefix: "&8[&6HLR&8] "
+
+# Here you can set the command response messages sent by the plugin.
+# Available placeholders: 
+#   %hoppername% - custom hopper name
+#   %fee% - transaction fee if set
+#   %maxamount% - max amount of hoppers that can be converted at once
+#   %chunklimit% - max amount of tweaked hoppers in one chunk
+# Message specific placeholders:
+#   %player% - recipient name (GiveHopper), sender name (ReceiveHopper)
+#   %amount% - amount of hoppers (GiveHopper, ReceiveHopper)
+
+Msgs:
+  ConvertCmd:
+    PlayerUseOnly: "&cThis is a player only command."
+    NoPermsConvert: "&cYou don't have permissions to do that."
+    NoMoneyConvert: "&cYou don't have enough money to convert the hopper."
+    ConvertSuccess: "&aSuccessfully converted the hopper to a %hoppername%&a!"
+    TransactionCost: "&9This transaction cost you &6$&a%fee%&9."
+    ConvertedHopper: "&cYou have already converted the hopper."
+    NotHoldingHopper: "&cYou are not holding a hopper right now."
+    StillCoolingDown: "&cThis command is still cooling down."
+    TooMuchHopperAtOnce: "&cYou cannot convert more than &e%maxamount% &choppers at once."
+
+  SubCmds:
+    NoPermsReload: "&cYou do not have the permission to use this command."
+    ReloadedPlugin: "&9HLR has been reloaded." 
+    UnknownArgument: "&cUnknown argument. Please type /HLR help for the help menu."
+    GiveCmd:
+      GiveHopper: "&6You gave %player% %amount% %hoppername%."
+      ReceiveHopper: "&6You have received %amount% %hoppername% from %player%."
+      ReceiveHopperFromConsole: "&6You have received %amount% %hoppername%&6."
+      GiveToSelf: "&6You got %amount% %hoppername%&6."
+      InvalidAmount: "&cThe amount you have entered is invalid."
+      PlayerNotFound: "&cThe player specified is either not online or invalid."
+      NoRecipient: "&cPlease enter the person you want to give the tweaked hopper to."
+      NoPermsGive: "&cYou do not have the permission to use this command."
+    
+  Listener:
+    PlacedHopper: "&eYou placed a %hoppername%&e!"
+    DestroyedHopper: "&cYou destroyed a %hoppername%&c!"
+    NotEnabledInWorld: "%hoppername% &cis not enabled in this world!"
+    HopperLimitReached: "&cThe %hoppername% &climit of &e%chunklimit%&c per chunk has been reached."
+
+  Timer:
+    CanUseConvertCmd: "&eYou can now use /converthopper again."
