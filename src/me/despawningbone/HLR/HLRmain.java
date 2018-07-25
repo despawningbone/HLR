@@ -17,7 +17,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class HLRmain extends JavaPlugin {
 	
     public static Economy econ = null;
-	public static HLRmain plugin;
 	public static Logger log;
 	public CHlistener listener = new CHlistener(this);
 	public HLRCommandMain HLRCM = new HLRCommandMain(this);
