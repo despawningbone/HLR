@@ -65,14 +65,13 @@ public class HLRCommandMain implements CommandExecutor {
 				}
 			}
 			if (canUseCommand) {
-				ItemStack item; ItemMeta meta;
+				ItemStack item; 
 				if(Integer.parseInt(HLRmain.ver.split("\\.")[1].trim()) >= 9) {
-					item = player.getInventory().getItemInMainHand();
-					meta = player.getInventory().getItemInMainHand().getItemMeta();	
+					item = player.getInventory().getItemInMainHand();	
 				} else {
 					item = player.getItemInHand();
-					meta = player.getItemInHand().getItemMeta();
 				}
+				ItemMeta meta = item.getItemMeta();
 				String CHname = HLRmain.CHname;
 				int maxamount = configHandler.maxamount;
 				if(configHandler.usePerms) {
@@ -103,14 +102,12 @@ public class HLRCommandMain implements CommandExecutor {
 										if(!player.hasPermission("HLR.nocooldown")) {
 											//player.sendMessage("Start-nperms");  //debug
 											start.put(player, true);
-											Timer timer = new Timer();
-											timer.main(player);			
+											Timer.cooldown(player);			
 										}
 									} else if(!player.isOp()) {
 										//player.sendMessage("Start-nop");  //debug
 										start.put(player, true);
-										Timer timer = new Timer();
-										timer.main(player);
+										Timer.cooldown(player);
 									}
 								}
 								if (paying) {
