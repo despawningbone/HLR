@@ -20,6 +20,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Hopper;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -127,46 +128,45 @@ public class CHlistener implements Listener {
 		}
 	}
 		
+	@SuppressWarnings("deprecation")
 	@EventHandler(priority=EventPriority.HIGH, ignoreCancelled=true)
 	public void onBlockBreak(BlockBreakEvent event){
 		Player player = (Player) event.getPlayer();
 	    String world = event.getBlock().getWorld().getName();
 		//player.sendMessage(world);
 		if(plugin.isEnabledIn(world)) {   //Note: it would cause problems if a tweaked hopper is still in disabled world and destroyed and then someone re-enabled the world 	
-			File DataFile = new File(plugin.getDataFolder() + File.separator
-					+ "Data.yml");
-			YamlConfiguration DFile = YamlConfiguration.loadConfiguration(DataFile);
-		    double x = event.getBlock().getX();
-		    double y = event.getBlock().getY();
-		    double z = event.getBlock().getZ();
-		    //player.sendMessage(String.valueOf(x));   //debug
-		    //player.sendMessage(String.valueOf(y));   //debug
-		    //player.sendMessage(String.valueOf(z));   //debug
-		    String coord = x + "," + y + "," + z;
-		    //player.sendMessage(coord);    //debug
-			if(DFile.getStringList(world).contains(coord))
+		    Map.Entry<UUID, String> entry = new AbstractMap.SimpleEntry<UUID, String>(event.getBlock().getWorld().getUID(), event.getBlock().getLocation().getChunk().toString());
+			if(blockInfo.get(entry) != null && blockInfo.get(entry).contains(event.getBlock().getLocation()))
 			{
 				boolean skip = false;
-				Map.Entry<UUID, String> entry = new AbstractMap.SimpleEntry<UUID, String>(event.getBlock().getWorld().getUID(), event.getBlock().getLocation().getChunk().toString());
 				try {
 					blockInfo.get(entry).remove(event.getBlock().getLocation());
 				} catch (NullPointerException e) {
 					skip = true;
 				}
 				if(!skip) {
+					File DataFile = new File(plugin.getDataFolder() + File.separator
+							+ "Data.yml");
+					YamlConfiguration DFile = YamlConfiguration.loadConfiguration(DataFile);
 					List<String> coordlist = DFile.getStringList(world);
 				    //plugin.log.info(coord);   //debug
+					String coord = event.getBlock().getX() + ".0," + event.getBlock().getY() + ".0," + event.getBlock().getZ() + ".0";
 				    coordlist.remove(coord);
 				    DFile.set(world, coordlist);
 				    ItemStack drop = new ItemStack(Material.HOPPER, 1);
 				    event.getBlock().breakNaturally(new ItemStack(Material.AIR));	
 				    ItemMeta meta = drop.getItemMeta();
-				    if(ConfigHandler.retainTweak) {
+				    ItemStack item = Integer.parseInt(HLRmain.ver.split("\\.")[1].trim()) >= 9 ? player.getInventory().getItemInMainHand() : player.getItemInHand();
+				    if(ConfigHandler.retainTweak && (!ConfigHandler.silk || item.containsEnchantment(Enchantment.SILK_TOUCH))) {
 					    meta.setDisplayName(HLRmain.CHname);
 					    meta.setLore(HLRmain.hopperlore);
 					    drop.setItemMeta(meta);	
 				    }
-				    event.getBlock().getLocation().getWorld().dropItemNaturally(event.getBlock().getLocation(), drop);
+				    if(ConfigHandler.toInv) {
+				    	player.getInventory().addItem(drop);
+				    } else {
+				    	event.getBlock().getLocation().getWorld().dropItemNaturally(event.getBlock().getLocation(), drop);
+				    }
 				    /*event.setCancelled(true);
 				    event.getBlock().breakNaturally();*/
 				    player.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("Listener.DestroyedHopper"));
@@ -276,19 +276,13 @@ public class CHlistener implements Listener {
 			/*for(Entry<UUID, String> e: blockInfo.keySet()) {  //debug
 				plugin.log.info("map" + e.toString());
 			}*/
-			boolean notinChunk = false;
+			boolean notInChunk = false;
 			List<Location> loc = null;
 			//plugin.log.info(entry == null ? "entrynull" : entry.toString());   //debug
 			//plugin.log.info("map" + String.valueOf(blockInfo.isEmpty()));   //debug
 			loc = blockInfo.get(entry);
-			try {	
-				//plugin.log.info("map" + loc.get(0).toString());    //debug
-				loc.size();   //check null or not
-			} catch (NullPointerException /*| ArrayIndexOutOfBoundsException*/ e) { 
-				notinChunk = true;
-				//plugin.log.info("null not in chunk");   //debug
-			}
-			if(!notinChunk) {
+			if(loc == null || loc.isEmpty()) notInChunk = true;
+			if(!notInChunk) {
 				//plugin.log.info("inchunk");  //debug
 				for(int i = 0; i < loc.size(); i++) {
 					Hopper hopper = null;
