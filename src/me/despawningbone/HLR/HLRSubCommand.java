@@ -34,6 +34,24 @@ public class HLRSubCommand implements CommandExecutor {
 						sender.sendMessage(ChatColor.RED + "/HLR reload" + ChatColor.GRAY + " - " + ChatColor.YELLOW + "Reloads the config.");
 					}
 					sender.sendMessage(ChatColor.RED + "/HLR about" + ChatColor.GRAY + " - " + ChatColor.YELLOW + "Displays the about page.");
+					if(sender.hasPermission("HLR.give")) {
+						sender.sendMessage(ChatColor.RED + "/HLR give" + ChatColor.GRAY + " - " + ChatColor.YELLOW + "Give an online player tweaked hoppers..");	
+					}
+					sender.sendMessage(ChatColor.RED + "/HLR revert" + ChatColor.GRAY + " - " + ChatColor.YELLOW + "Revert tweaked hoppers back into their vanilla state.");
+				} else if (args[0].equalsIgnoreCase("revert")) {
+					if(sender instanceof Player) {
+						Player player = (Player) sender;
+						@SuppressWarnings("deprecation")
+						ItemStack item = Integer.parseInt(HLRmain.ver.split("\\.")[1].trim()) >= 9 ? player.getInventory().getItemInMainHand() : player.getItemInHand();
+						if(item.hasItemMeta() && item.getItemMeta().getDisplayName().equals(HLRmain.CHname)) {
+							item.setItemMeta(new ItemStack(Material.HOPPER).getItemMeta());
+							sender.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("SubCmds.RevertCmd.Reverted"));
+						} else {
+							sender.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("SubCmds.RevertCmd.NotConverted"));
+						}
+					} else {
+						sender.sendMessage(ConfigHandler.prefix + ConfigHandler.msgMap.get("ConvertCmd.PlayerUseOnly"));
+					}
 				} else if (args[0].equalsIgnoreCase("reload")) {
 					if(sender.hasPermission("HLR.reload")){
 						configHandler.reloadConfig(sender, ConfigHandler.prefix + ConfigHandler.msgMap.get("SubCmds.ReloadedPlugin"));	
