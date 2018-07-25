@@ -46,7 +46,10 @@ public class ConfigHandler {
 	static long time;
 	boolean cooldown;
 	public static boolean retainTweak = true;
+	public static boolean silk;
+	public static boolean toInv;
 	public static boolean greedy;
+	
 	public static String prefix;
 	public static HashMap<String, String> msgMap = new HashMap<String, String>(); 
 	List<String> customitems;
@@ -249,6 +252,8 @@ public class ConfigHandler {
 		
 		greedy = config.getBoolean("Greedy-mode");
 		retainTweak = config.getBoolean("Retain-tweaked");
+		silk = config.getBoolean("Silk-only");
+		toInv = config.getBoolean("To-inv");
 		
 		pistonAllow = config.getBoolean("Farm-tweaks.Piston-farms.Allow");
 		strPistonBlacklist = config.getStringList("Farm-tweaks.Piston-farms.Blacklist");
